@@ -2,8 +2,8 @@ node_modules
 dist
 .git
 .gitignore
-npm-debug.log
-.DS_Store
-coverage
 tests
-__mocks__
+coverage
+.vscode
+*.log
+*.map
