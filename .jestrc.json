@@ -1,5 +1,7 @@
 {
   "preset": "ts-jest",
   "testEnvironment": "node",
-  "testMatch": ["**/*.spec.ts"]
+  "roots": ["<rootDir>/tests"],
+  "moduleFileExtensions": ["ts", "js"],
+  "clearMocks": true
 }
