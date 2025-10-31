@@ -1,0 +1,43 @@
+name: CD - Build & Push Docker (Docker Hub)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Compute tags
+        id: meta
+        run: |
+          APP=${{ secrets.DOCKERHUB_USERNAME }}/sysinfo-api
+          SHA=${GITHUB_SHA::7}
+          echo "IMAGE=$APP"        >> $GITHUB_OUTPUT
+          echo "TAG_SHA=$SHA"      >> $GITHUB_OUTPUT
+          echo "TAG_LATEST=latest" >> $GITHUB_OUTPUT
+
+      - name: Build image
+        run: |
+          docker build \
+            -t ${{ steps.meta.outputs.IMAGE }}:${{ steps.meta.outputs.TAG_LATEST }} \
+            -t ${{ steps.meta.outputs.IMAGE }}:${{ steps.meta.outputs.TAG_SHA }} \
+            .
+
+      - name: Push image
+        run: |
+          docker push ${{ steps.meta.outputs.IMAGE }}:${{ steps.meta.outputs.TAG_LATEST }}
+          docker push ${{ steps.meta.outputs.IMAGE }}:${{ steps.meta.outputs.TAG_SHA }}
