@@ -1,0 +1,33 @@
+name: Deploy to Azure Container Instances
+
+on:
+  workflow_run:
+    workflows: [ "Build & Push Image" ]  # se déclenche quand l'image a été poussée
+    types: [ "completed" ]
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to ACI
+        uses: azure/aci-deploy@v1
+        with:
+          resource-group: ${{ secrets.ACI_RESOURCE_GROUP }}
+          name: ${{ secrets.ACI_NAME }}
+          image: ${{ secrets.CONTAINER_IMAGE }}
+          location: ${{ secrets.ACI_REGION }}
+          dns-name-label: ${{ secrets.ACI_DNS_LABEL }}   # nécessaire pour obtenir un FQDN
+          ports: ${{ secrets.CONTAINER_PORT }}
+          cpu: 1
+          memory: 1.5
+          # Décommente ces 2 lignes si ton image est privée sur Docker Hub :
+          # registry-username: ${{ secrets.REGISTRY_USERNAME }}
+          # registry-password: ${{ secrets.REGISTRY_PASSWORD }}
